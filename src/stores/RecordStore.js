@@ -1,25 +1,25 @@
 import Actions from '../actions';
 import { createStore } from 'reflux';
 
+import { flatten } from '../utilities';
+
 let RecordStore = createStore({
-	listenables: [Actions],
+	// listenables: [Actions],
 	init() {
 		this.records = [];
+		this.joinTrailing(
+			Actions.getMetadata,
+			Actions.getMetadata.completed,
+			Actions.readFile.completed,
+			this.onTagsAndReadCompleted
+		);
 	},
 	getInitialState() {
 		return this.records;
 	},
-	onReadFileAbort(ev) {
-		console.log('abort', ev);
-	},
-	onReadFileFailed(ev) {
-		console.log('failed', ev);
-	},
-	onReadFileCompleted(ev) {
-		console.log('completed', ev);
-	},
-	onReadFileProgress(ev) {
-		console.log('progress', ev);
+	onTagsAndReadCompleted(...args) {
+		let [ file, meta, read ] = flatten(args);
+		console.log(file, meta, read);
 	}
 });
 

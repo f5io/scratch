@@ -1,4 +1,5 @@
 let eventMap = { completed: 'load', failed: 'error' };
+
 export default function readFile(file) {
 	return new Promise((resolve, reject) => {
 		let fileReader = new FileReader();

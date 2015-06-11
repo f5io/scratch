@@ -12,8 +12,7 @@ gulp.task('scripts', function() {
 	return browserify({ debug: true })
 		.transform(babelify.configure({
 			optional: ['runtime'],
-			sourceMapRelative: '/Users/joe/Workspace/Fourth\ of\ 5/prototype\ \(scratch\)/src'
-			//path.resolve(process.cwd(), 'src').replace(/(\s|\[|\]|\(|\))/g, '\\$1')
+			sourceMapRelative: path.resolve(process.cwd(), 'src').replace(/(\s|\[|\]|\(|\))/g, '\\$1')
 		}))
 		.transform(uglifyify)
 		.require('./src/app.js', { entry: true })

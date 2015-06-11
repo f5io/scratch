@@ -15,7 +15,9 @@ let DropTarget = React.createClass({
 		e.stopPropagation();
 	},
 	handleDrop(e) {
-		Actions.readFile(e.dataTransfer.files[0]);
+		var file = e.dataTransfer.files[0];
+		Actions.getMetadata(file);
+		Actions.readFile(file);
 	},
 	componentDidMount() {
 		window.addEventListener('drop', this.prevent);
