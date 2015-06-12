@@ -1,9 +1,10 @@
-let eventMap = { completed: 'load', failed: 'error' };
-
 export default function readFile(file) {
 	return new Promise((resolve, reject) => {
 		let fileReader = new FileReader();
-		this.children.forEach(event => fileReader.addEventListener(eventMap[event] || event, this[event]), this);
+		fileReader.addEventListener('load', e => resolve(fileReader.result));
+		fileReader.addEventListener('error', e => reject(e));
+		fileReader.addEventListener('abort', e => this.abort(e));
+		fileReader.addEventListener('progress', e => this.progress(e));
 		fileReader.readAsArrayBuffer(file);
 	});
 }
