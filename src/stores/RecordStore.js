@@ -1,8 +1,6 @@
 import Actions from '../actions';
 import { createStore } from 'reflux';
 
-import { flatten } from '../utilities';
-
 let RecordStore = createStore({
 	listenables: [Actions],
 	init() {
@@ -20,8 +18,7 @@ let RecordStore = createStore({
 	onReadFileProgress(e) {
 		console.log('progress');
 	},
-	onTagsAndReadCompleted(...args) {
-		let [ file, meta, buffer ] = flatten(args);
+	onTagsAndReadCompleted([ file ], [ meta ], [ buffer ]) {
 		console.log(file, meta, buffer);
 	}
 });

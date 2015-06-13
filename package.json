@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "http-server -p 1337 -s -o & gulp"
+    "start": "gulp styles && gulp scripts && http-server -p 1337 -s -o & gulp watch"
   },
   "author": "",
   "license": "ISC",
