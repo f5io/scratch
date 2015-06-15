@@ -19,6 +19,8 @@ let RecordStore = createStore({
 		console.log('progress');
 	},
 	onTagsAndReadCompleted([ file ], [ meta ], [ buffer ]) {
+		this.records.push(Object.assign(meta, { file, buffer }));
+		this.trigger(this.records);
 		console.log(file, meta, buffer);
 	}
 });
