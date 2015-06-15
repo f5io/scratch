@@ -1,6 +1,11 @@
 import Actions from '../actions';
 import { createStore } from 'reflux';
 
+const Record = {
+	isPlaying: false,
+	playbackRate: 1
+};
+
 let RecordStore = createStore({
 	listenables: [Actions],
 	init() {
@@ -19,9 +24,8 @@ let RecordStore = createStore({
 		console.log('progress');
 	},
 	onTagsAndReadCompleted([ file ], [ meta ], [ buffer ]) {
-		this.records.push(Object.assign(meta, { file, buffer }));
+		this.records.push(Object.assign(Object.create(Record), meta, { file, buffer }));
 		this.trigger(this.records);
-		console.log(file, meta, buffer);
 	}
 });
 

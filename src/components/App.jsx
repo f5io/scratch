@@ -1,6 +1,6 @@
 import React  from 'react';
 import { connect } from 'reflux';
-import { DropTarget } from './';
+import { DropTarget, Decks } from './';
 import { RecordStore } from '../stores';
 
 let App = React.createClass({
@@ -9,7 +9,10 @@ let App = React.createClass({
 		return {};
 	},
 	render() {
-		return (<DropTarget/>);
+		return (
+			<Decks/>
+			<DropTarget/>
+		);
 	}
 });
 
