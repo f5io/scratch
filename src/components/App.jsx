@@ -10,8 +10,10 @@ let App = React.createClass({
 	},
 	render() {
 		return (
-			<Decks/>
-			<DropTarget/>
+			<div>
+				<Decks/>
+				<DropTarget/>
+			</div>
 		);
 	}
 });

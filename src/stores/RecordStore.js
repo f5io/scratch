@@ -25,6 +25,7 @@ let RecordStore = createStore({
 	},
 	onTagsAndReadCompleted([ file ], [ meta ], [ buffer ]) {
 		this.records.push(Object.assign(Object.create(Record), meta, { file, buffer }));
+		Actions.estimateBpm(buffer);
 		this.trigger(this.records);
 	}
 });

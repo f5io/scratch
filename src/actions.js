@@ -1,6 +1,7 @@
 import { createActions } from 'reflux';
 import {
 	decodeAudioData,
+	estimateBpm,
 	getArtwork,
 	getTags,
 	readFile
@@ -8,6 +9,7 @@ import {
 
 let Actions = createActions({
 	decodeAudioData: { asyncResult: true },
+	estimateBpm: {},
 	getMetadata: { asyncResult: true },
 	getArtwork: { asyncResult: true },
 	getTags: { asyncResult: true },
@@ -17,6 +19,8 @@ let Actions = createActions({
 		children: ['abort', 'progress']
 	}
 });
+
+Actions.estimateBpm.listen(estimateBpm);
 
 Actions.decodeAudioData.listenAndPromise(decodeAudioData);
 Actions.getArtwork.listenAndPromise(getArtwork);

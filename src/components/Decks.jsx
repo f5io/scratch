@@ -6,7 +6,7 @@ import { RecordStore } from '../stores';
 let Decks = React.createClass({
 	mixins: [connect(RecordStore), 'records'],
 	getInitialState() {
-		return [];
+		return { records: [] };
 	},
 	render() {
 		var vinyls = this.state.records.map(function(record) {
