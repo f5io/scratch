@@ -10,10 +10,7 @@ var gulp = require('gulp'),
 
 gulp.task('scripts', function() {
 	return browserify({ debug: true })
-		.transform(babelify.configure({
-			optional: ['runtime'],
-			sourceMapRelative: path.resolve(process.cwd(), 'src').replace(/(\s|\[|\]|\(|\))/g, '\\$1')
-		}))
+		.transform(babelify)
 		.transform(uglifyify)
 		.require('./src/app.js', { entry: true })
 		.bundle()

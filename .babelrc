@@ -1,0 +1,6 @@
+{
+	"optional" : ["runtime"],
+  "ignore": [
+    "src/api/bpmWorker.js"
+  ]
+}
