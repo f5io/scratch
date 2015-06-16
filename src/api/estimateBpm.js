@@ -1,75 +1,63 @@
-let offlineContext;
+const MIN_THRESHOLD = 0.3;
+const MIN_PEAKS = 30;
 
 let renderCompleteHandler = (e) => {
 	let buffer = e.renderedBuffer;
 	let channelData = buffer.getChannelData(0);
-	let peaks = getPeaksAtThreshold(channelData, -0.55);
-	let intervals = countIntervalsBetweenNearbyPeaks(peaks);
-	let neighbors = groupNeighborsByTempo(intervals);
-	console.log(neighbors);
+  let threshold = 0.9;
+	let peaks;
+  do {
+    peaks = getPeaksAtThreshold(channelData, threshold);
+    threshold -= 0.05;
+  } while (peaks.length < MIN_PEAKS && threshold >= MIN_THRESHOLD);
+  let intervals = countIntervalsBetweenNearbyPeaks(peaks);
+  let neighbors = groupNeighborsByTempo(intervals);
+  let avg = averageCountsOverThreshold(neighbors);
+  console.log(avg);
 }
 
 function getPeaksAtThreshold(data, threshold) {
-  var peaksArray = [];
-  var length = data.length;
-  for(var i = 0; i < length;) {
+  var arr = [];
+  for (var i = 0; i < data.length; i++) {
     if (data[i] > threshold) {
-      peaksArray.push(i);
-      // Skip forward ~ 1/4s to get past this peak.
-      i += 10000;
+      arr.push(i);
+      i += 9999;
     }
-    i++;
   }
-  return peaksArray;
+  return arr;
 }
 
 function countIntervalsBetweenNearbyPeaks(peaks) {
-  var intervalCounts = [];
-  console.log(peaks.length);
-  peaks.forEach(function(peak, index) {
-    for(var i = 0; i < 10; i++) {
-      var interval = peaks[index + i] - peak;
-      var foundInterval = intervalCounts.some(function(intervalCount) {
-        if (intervalCount.interval === interval)
-          return intervalCount.count++;
-      });
-      if (!foundInterval) {
-        intervalCounts.push({
-          interval: interval,
-          count: 1
-        });
-      }
+  return peaks.reduce((acc, peak, index, arr) => {
+    for (let i = 0; i < 10; i++) {
+      var interval = arr[index + i] - peak;
+      acc[interval] = ++acc[interval] || 1;
     }
-  });
-  return intervalCounts;
+    return acc;
+  }, {});
 }
 
 function groupNeighborsByTempo(intervalCounts) {
-	console.log(intervalCounts.length);
-  var tempoCounts = []
-  intervalCounts.forEach(function(intervalCount, i) {
-    // Convert an interval to tempo
-    var theoreticalTempo = 60 / (intervalCount.interval / 44100 );
-
-    // Adjust the tempo to fit within the 90-180 BPM range
-    while (theoreticalTempo < 90) theoreticalTempo *= 2;
+  return Object.keys(intervalCounts).reduce((acc, key) => {
+    if (isNaN(key) || key == 0) return acc;
+    let count = intervalCounts[key];
+    let theoreticalTempo = 60 / (key / 44100);
+    while (theoreticalTempo < 80) theoreticalTempo *= 2;
     while (theoreticalTempo > 180) theoreticalTempo /= 2;
-
-    var foundTempo = tempoCounts.some(function(tempoCount) {
-      if (tempoCount.tempo === theoreticalTempo)
-        return tempoCount.count += intervalCount.count;
-    });
-    if (!foundTempo) {
-      tempoCounts.push({
-        tempo: theoreticalTempo,
-        count: intervalCount.count
-      });
-    }
-  });
+    theoreticalTempo = theoreticalTempo.toFixed(2);
+    acc[theoreticalTempo] = acc[theoreticalTempo] || 0;
+    acc[theoreticalTempo] += count;
+    return acc;
+  }, {});
 }
 
+function averageCountsOverThreshold(neighbors) {
+  let values = Object.keys(neighbors).sort((a, b) => neighbors[b] - neighbors[a]);
+  return values[0];
+};
+
 export default function estimateBpm(buffer) {
-	offlineContext = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
+	let offlineContext = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
 	let source = offlineContext.createBufferSource();
 	let filter = offlineContext.createBiquadFilter();
 	filter.type = 'lowpass';
