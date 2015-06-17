@@ -5,7 +5,8 @@ export default function getArtwork(tags) {
 		&api_key=e53a30d5c5f1991c28d57b4562f3fd76
 		&format=json`)
 		.then(response => response.json())
-		.then(json => json.results.albummatches.album.image)
+		.then(json => json.results.albummatches.album)
+		.then(matches => matches.length && matches[0].image || matches.image)
 		.then(images => images.reduce((acc, image) => (acc[image.size] = image['#text']) && acc, {}))
 		.then(images => Object.assign(tags, { artwork: images }));
 };

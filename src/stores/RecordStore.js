@@ -14,6 +14,7 @@ let RecordStore = createStore({
 			Actions.getMetadata,
 			Actions.getMetadata.completed,
 			Actions.readAndDecodeFile.completed,
+			Actions.estimateBpm.completed,
 			this.onTagsAndReadCompleted
 		);
 	},
@@ -23,9 +24,9 @@ let RecordStore = createStore({
 	onReadFileProgress(e) {
 		console.log('progress');
 	},
-	onTagsAndReadCompleted([ file ], [ meta ], [ buffer ]) {
-		this.records.push(Object.assign(Object.create(Record), meta, { file, buffer }));
-		Actions.estimateBpm(buffer);
+	onTagsAndReadCompleted([ file ], [ meta ], [ buffer ], [ bpm ]) {
+		this.records.push(Object.assign(Object.create(Record), meta, { file, buffer, bpm }));
+		console.log(this.records);
 		this.trigger(this.records);
 	}
 });
