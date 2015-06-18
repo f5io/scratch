@@ -19,7 +19,9 @@ let Actions = createActions({
 	readFile: {
 		asyncResult: true,
 		children: ['abort', 'progress']
-	}
+	},
+	setPlatter: {},
+	togglePlayState: {}
 });
 
 Actions.decodeAudioData.listenAndPromise(decodeAudioData);

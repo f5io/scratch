@@ -4,15 +4,13 @@ import { DropTarget, Decks } from './';
 import { RecordStore } from '../stores';
 
 let App = React.createClass({
-	mixins: [connect(RecordStore)],
-	getInitialState() {
-		return {};
-	},
+	mixins: [connect(RecordStore, 'records')],
 	render() {
 		return (
 			<div>
-				<Decks/>
-				<DropTarget/>
+				<DropTarget>
+					<Decks records={this.state.records}/>
+				</DropTarget>
 			</div>
 		);
 	}

@@ -1,17 +1,19 @@
 import React from 'react';
-import { connect } from 'reflux';
+import Reflux from 'reflux';
 import { Vinyl } from './';
 import { RecordStore } from '../stores';
 
 let Decks = React.createClass({
-	mixins: [connect(RecordStore), 'records'],
+	propTypes: {
+		records: React.PropTypes.array.isRequired
+	},
 	getInitialState() {
-		return { records: [] };
+		return {
+			context: new AudioContext()
+		};
 	},
 	render() {
-		var vinyls = this.state.records.map(function(record) {
-			return (<Vinyl record={record}/>);
-		});
+		var vinyls = this.props.records.map(record => (<Vinyl key={record.platter} context={this.state.context} {...record}/>), this);
 		return (
 			<div className="decks">
 				{vinyls}

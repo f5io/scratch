@@ -1,16 +1,17 @@
 import Actions from '../actions';
 import { createStore } from 'reflux';
+import { toArray } from '../utilities';
 
 const Record = {
-	isPlaying: false,
-	playbackRate: 1
+	isPlaying: false
 };
 
 let RecordStore = createStore({
 	listenables: [Actions],
 	init() {
-		this.records = [];
+		this.records = {};
 		this.joinTrailing(
+			Actions.setPlatter,
 			Actions.getMetadata,
 			Actions.getMetadata.completed,
 			Actions.readAndDecodeFile.completed,
@@ -19,15 +20,18 @@ let RecordStore = createStore({
 		);
 	},
 	getInitialState() {
-		return this.records;
+		return toArray(this.records);
 	},
 	onReadFileProgress(e) {
 		console.log('progress');
 	},
-	onTagsAndReadCompleted([ file ], [ meta ], [ buffer ], [ bpm ]) {
-		this.records.push(Object.assign(Object.create(Record), meta, { file, buffer, bpm }));
-		console.log(this.records);
-		this.trigger(this.records);
+	onTogglePlayState(platter, playing) {
+		this.records[platter].isPlaying = playing;
+		this.trigger(toArray(this.records));
+	},
+	onTagsAndReadCompleted([ platter ], [ file ], [ meta ], [ buffer ], [ bpm ]) {
+		this.records[platter] = Object.assign({}, Record, meta, { platter, file, buffer, bpm });
+		this.trigger(toArray(this.records));
 	}
 });
 

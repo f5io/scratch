@@ -15,7 +15,9 @@ let DropTarget = React.createClass({
 		e.stopPropagation();
 	},
 	handleDrop(e) {
-		var file = e.dataTransfer.files[0];
+		let file = e.dataTransfer.files[0];
+		let platter = e.clientX > window.innerWidth / 2 ? 'RIGHT' : 'LEFT';
+		Actions.setPlatter(platter);
 		Actions.getMetadata(file);
 		Actions.parseFile(file);
 	},
@@ -28,8 +30,7 @@ let DropTarget = React.createClass({
 		window.addEventListener('dragover', this.prevent);
 	},
 	render() {
-		let str = 'Hello Bubba!';
-		return (<div style={styles} onDrop={this.handleDrop}>{str}</div>);
+		return (<div style={styles} onDrop={this.handleDrop}>{this.props.children}</div>);
 	}
 });
 
