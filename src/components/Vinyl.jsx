@@ -79,9 +79,10 @@ let Vinyl = React.createClass({
 			this.setState(newState);
 		}
 	},
-	componentWillUpdate(props, state) {
-		if (this.state.isPlaying) {
-			this.state.source.playbackRate.value = state.playbackRate;
+	componentWillUpdate(nextProps, nextState) {
+		let { isPlaying, source } = this.state;
+		if (isPlaying) {
+			source.playbackRate.value = nextState.playbackRate;
 		}
 	},
 	render() {
