@@ -9,6 +9,11 @@ let styles = {
 	position: 'fixed'
 };
 
+const Platter = {
+	LEFT: 'left',
+	RIGHT: 'right'
+};
+
 let DropTarget = React.createClass({
 	prevent(e) {
 		e.preventDefault();
@@ -16,7 +21,7 @@ let DropTarget = React.createClass({
 	},
 	handleDrop(e) {
 		let file = e.dataTransfer.files[0];
-		let platter = e.clientX > window.innerWidth / 2 ? 'RIGHT' : 'LEFT';
+		let platter = e.clientX > window.innerWidth / 2 ? Platter.RIGHT : Platter.LEFT;
 		Actions.setPlatter(platter);
 		Actions.getMetadata(file);
 		Actions.parseFile(file);
