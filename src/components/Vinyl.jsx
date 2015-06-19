@@ -1,4 +1,5 @@
 import React from 'react';
+import Interpol from 'interpol-js';
 import Actions from '../actions';
 
 let Styles = {
@@ -24,13 +25,18 @@ let Styles = {
 			right: '-225px'
 		}
 	},
+	details: {
+		top: '425px',
+		position: 'relative'
+	},
 	label: {
 		position: 'relative',
 		width: '172px',
 		height: '172px',
 		top: '114px',
 		borderRadius: '100px',
-		pointerEvents: 'none'
+		pointerEvents: 'none',
+		willChange: 'transform'
 	}
 };
 
@@ -40,8 +46,9 @@ let Vinyl = React.createClass({
 			isPlaying: false,
 			playbackRate: 1,
 			startOffset: 0,
-			startTime: 0
-		}, this.setupOscillators(), this.setupSource());
+			startTime: 0,
+			rotation: 0
+		}, this.setupTween(), this.setupOscillators(), this.setupSource());
 	},
 	setupOscillators() {
 		let { context } = this.props;
@@ -71,6 +78,22 @@ let Vinyl = React.createClass({
 
 		return { source, hasPlayed };
 	},
+	setupTween() {
+		let duration = parseInt(60000 / 33.333, 10);
+		let val = this.state && this.state.rotation || 0;
+		let tween = Interpol.tween()
+			.duration(duration)
+			.from(val)
+			.to(val - 360)
+			.repeat(Infinity)
+			.step(rotation => {
+				let node = React.findDOMNode(this.refs.label);
+				this.setState({ rotation });
+				node.style.transform = `rotate(${rotation}deg)`;
+			});
+
+		return { duration, tween };
+	},
 	handlePlay() {
 		Actions.togglePlayState(this.props.platter, !this.state.isPlaying);
 	},
@@ -93,10 +116,11 @@ let Vinyl = React.createClass({
 	},
 	componentWillReceiveProps(nextProps) {
 		let { isPlaying, context } = nextProps;
-		let { source, playbackRate, startOffset, startTime, hasPlayed } = this.state;
+		let { source, playbackRate, startOffset, startTime, hasPlayed, tween } = this.state;
 		if (isPlaying !== this.state.isPlaying) {
 			let newState = { isPlaying };
 			if (isPlaying) {
+				tween[tween.hasStarted ? 'play' : 'start']();
 				source.playbackRate.value = playbackRate;
 				source.start(0, startOffset);
 				Object.assign(newState, {
@@ -104,6 +128,7 @@ let Vinyl = React.createClass({
 					startTime: context.currentTime
 				});
 			} else if (hasPlayed) {
+				tween.pause();
 				Object.assign(newState, {
 					startOffset: startOffset += context.currentTime - startTime
 				});
@@ -113,26 +138,34 @@ let Vinyl = React.createClass({
 		}
 	},
 	componentWillUpdate(nextProps, nextState) {
-		let { isPlaying, source } = this.state;
-		if (isPlaying) source.playbackRate.value = nextState.playbackRate;
+		let { isPlaying, source, tween, duration, rotation } = this.state;
+		if (isPlaying && source.playbackRate.value !== nextState.playbackRate) {
+			source.playbackRate.value = nextState.playbackRate;
+			tween.stop().from(rotation).to(rotation - 360).duration(duration / nextState.playbackRate).start();
+		}
 	},
 	render() {
 		let vinylMergedStyles = Object.assign({}, Styles.vinyl.base, Styles.vinyl[this.props.platter]);
 		return (
-			<div className="vinyl" style={vinylMergedStyles}>
-				<img style={Styles.label} src={this.props.artwork.large}/>
+			<div>
+				<div ref="vinyl" style={vinylMergedStyles}>
+					<img ref="label" style={Styles.label} src={this.props.artwork.large}/>
+				</div>
+				<div ref="details" style={Styles.details}>
+					<h1>{this.props.title}</h1>
+					<h2>{this.props.artist}</h2>
+					<h3>{this.props.album}</h3>
+					<p>Approximate BPM: {this.props.bpm * this.state.playbackRate}</p>
+					<button onClick={this.handlePlay}>{this.state.isPlaying ? 'Pause' : 'Play'}</button>
+					<button onClick={this.handlePlaybackRate.bind(this, 1)}>Increase</button>
+					<button onClick={this.handlePlaybackRate.bind(this, -1)}>Decrease</button>
+					<button onClick={this.handlePlaybackRate.bind(this, 0)}>Reset</button>
+				</div>
 			</div>
 		);
 	}
 });
 
-// <h1>{this.props.title}</h1>
-// <h2>{this.props.artist}</h2>
-// <h3>{this.props.album}</h3>
-// <p>Approximate BPM: {this.props.bpm * this.state.playbackRate}</p>
-// <button onClick={this.handlePlay}>{this.state.isPlaying ? 'Pause' : 'Play'}</button>
-// <button onClick={this.handlePlaybackRate.bind(this, 1)}>Increase</button>
-// <button onClick={this.handlePlaybackRate.bind(this, -1)}>Decrease</button>
-// <button onClick={this.handlePlaybackRate.bind(this, 0)}>Reset</button>
+
 
 export default Vinyl;
