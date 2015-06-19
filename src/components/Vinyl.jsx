@@ -1,6 +1,39 @@
 import React from 'react';
 import Actions from '../actions';
 
+let Styles = {
+	vinyl: {
+		base: {
+			width: '400px',
+			height: '400px',
+			top: '0',
+			position: 'absolute',
+			background: 'url(assets/img/vinyl_bg.png) center center no-repeat',
+			textAlign: 'center',
+			cursor: 'hand',
+			cursor: 'grab',
+			cursor: '-moz-grab',
+			cursor: '-webkit-grab'
+		},
+		left: {
+			left: '-225px',
+			right: 'auto',
+		},
+		right: {
+			left: 'auto',
+			right: '-225px'
+		}
+	},
+	label: {
+		position: 'relative',
+		width: '172px',
+		height: '172px',
+		top: '114px',
+		borderRadius: '100px',
+		pointerEvents: 'none'
+	}
+};
+
 let Vinyl = React.createClass({
 	getInitialState() {
 		return Object.assign({
@@ -81,25 +114,25 @@ let Vinyl = React.createClass({
 	},
 	componentWillUpdate(nextProps, nextState) {
 		let { isPlaying, source } = this.state;
-		if (isPlaying) {
-			source.playbackRate.value = nextState.playbackRate;
-		}
+		if (isPlaying) source.playbackRate.value = nextState.playbackRate;
 	},
 	render() {
+		let vinylMergedStyles = Object.assign({}, Styles.vinyl.base, Styles.vinyl[this.props.platter]);
 		return (
-			<div className="vinyl">
-				<h1>{this.props.title}</h1>
-				<h2>{this.props.artist}</h2>
-				<h3>{this.props.album}</h3>
-				<img src={this.props.artwork.large}/>
-				<p>Approximate BPM: {this.props.bpm * this.state.playbackRate}</p>
-				<button onClick={this.handlePlay}>{this.state.isPlaying ? 'Pause' : 'Play'}</button>
-				<button onClick={this.handlePlaybackRate.bind(this, 1)}>Increase</button>
-				<button onClick={this.handlePlaybackRate.bind(this, -1)}>Decrease</button>
-				<button onClick={this.handlePlaybackRate.bind(this, 0)}>Reset</button>
+			<div className="vinyl" style={vinylMergedStyles}>
+				<img style={Styles.label} src={this.props.artwork.large}/>
 			</div>
 		);
 	}
 });
+
+// <h1>{this.props.title}</h1>
+// <h2>{this.props.artist}</h2>
+// <h3>{this.props.album}</h3>
+// <p>Approximate BPM: {this.props.bpm * this.state.playbackRate}</p>
+// <button onClick={this.handlePlay}>{this.state.isPlaying ? 'Pause' : 'Play'}</button>
+// <button onClick={this.handlePlaybackRate.bind(this, 1)}>Increase</button>
+// <button onClick={this.handlePlaybackRate.bind(this, -1)}>Decrease</button>
+// <button onClick={this.handlePlaybackRate.bind(this, 0)}>Reset</button>
 
 export default Vinyl;

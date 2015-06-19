@@ -1,7 +1,7 @@
 import React from 'react';
 import Actions from '../actions';
 
-let styles = {
+let Styles = {
 	background: 'red',
 	width: '100%',
 	height: '100%',
@@ -35,7 +35,7 @@ let DropTarget = React.createClass({
 		window.addEventListener('dragover', this.prevent);
 	},
 	render() {
-		return (<div style={styles} onDrop={this.handleDrop}>{this.props.children}</div>);
+		return (<div style={Styles} onDrop={this.handleDrop}>{this.props.children}</div>);
 	}
 });
 
