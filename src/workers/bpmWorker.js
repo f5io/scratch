@@ -34,7 +34,7 @@ let bpmWorker = Bonobo('bpm')
 				let count = intervalCounts[key];
 				let theoreticalTempo = 60 / (key / this['SAMPLE_RATE']);
 				while (theoreticalTempo < 75) theoreticalTempo *= 2;
-				while (theoreticalTempo > 180) theoreticalTempo /= 2;
+				while (theoreticalTempo > 160) theoreticalTempo /= 2;
 				theoreticalTempo = theoreticalTempo.toFixed(2);
 				acc[theoreticalTempo] = count += (acc[theoreticalTempo] || 0);
 				return acc;

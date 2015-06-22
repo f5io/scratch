@@ -1,6 +1,7 @@
 import React from 'react';
 import Interpol from 'interpol-js';
 import Actions from '../actions';
+import { rad2deg, localToGlobal, uuid } from '../utilities';
 
 let Styles = {
 	vinyl: {
@@ -43,12 +44,20 @@ let Styles = {
 let Vinyl = React.createClass({
 	getInitialState() {
 		return Object.assign({
+			uuid: uuid(),
 			isPlaying: false,
 			isInteracting: false,
 			playbackRate: 1,
 			startOffset: 0,
 			startTime: 0,
-			rotation: 0
+			rotation: 0,
+			rotationAtInteract: null,
+			angleAtInteract: null,
+			angleAtMove: 0,
+			lastMouseX: -1, lastMouseY: -1, lastMouseTime: null,
+			mouseTravel: 0, mouseSpeed: 0,
+			centerX: parseInt(Styles.vinyl.base.width, 10) / 2,
+			centerY: parseInt(Styles.vinyl.base.height, 10) / 2
 		}, this.setupTween(), this.setupOscillators(), this.setupSource());
 	},
 	setupOscillators() {
@@ -93,9 +102,6 @@ let Vinyl = React.createClass({
 
 		return { duration, tween };
 	},
-	globalToLocal({ clientX, clientY }) {
-
-	},
 	preventDefault(e) {
 		e.preventDefault();
 	},
@@ -106,20 +112,76 @@ let Vinyl = React.createClass({
 		let playbackRate = diff === 0 ? 1 : Math.max(0.25, this.state.playbackRate += (diff * 0.25));
 		this.setState({ playbackRate });
 	},
+	handleAudioDown() {
+		let isPlaying = false;
+		let { oscillator, scratch, uuid } = this.state;
+
+		Interpol.pipeline.add(uuid, this.handleAudioMove);
+
+		oscillator.start();
+		scratch.start();
+		Actions.togglePlayState(this.props.platter, isPlaying);
+	},
+	handleAudioMove() {
+
+	},
+	handleAudioUp() {
+		let isPlaying = true;
+		let { oscillator, scratch, uuid } = this.state;
+
+		Interpol.pipeline.remove(uuid);
+
+		oscillator.stop();
+		scratch.stop();
+		Actions.togglePlayState(this.props.platter, isPlaying);
+		this.setState(this.setupOscillators());
+	},
 	handleMouseDown(e) {
 		this.preventDefault(e);
-		let isInteracting = !this.state.isInteracting;
-		this.setState({ isInteracting });
+		this.handleAudioDown();
+		let isInteracting = true;
+		let { centerX, centerY, rotation } = this.state;
+		let { clientX, clientY } = e.changedTouches && e.changedTouches[0] || e;
+		let { x, y } = localToGlobal(React.findDOMNode(this.refs.vinyl), { centerX, centerY });
+		let angleAtInteract = rad2deg(Math.atan2(clientY - y, clientX - x));
+		let rotationAtInteract = rotation;
+		this.setState({ isInteracting, angleAtInteract, rotationAtInteract });
 	},
 	handleMouseMove(e) {
 		this.preventDefault(e);
-		let { isInteracting } = this.state;
+		let {
+			isInteracting, rotation, rotationAtInteract,
+			lastMouseX, lastMouseY, lastMouseTime,
+			mouseTravel, mouseSpeed,
+			angleAtMove, angleAtInteract,
+			centerX, centerY
+		} = this.state;
 		if (!isInteracting) return;
+		let { clientX, clientY } = e.changedTouches && e.changedTouches[0] || e;
+		let { x, y } = localToGlobal(React.findDOMNode(this.refs.vinyl), { centerX, centerY });
+		if (lastMouseX > -1) {
+			mouseTravel += Math.max(Math.abs(clientX - lastMouseX), Math.abs(clientY - lastMouseY));
+		}
+		lastMouseX = clientX;
+		lastMouseY = clientY;
+		let timeNow = Date.now();
+		if (lastMouseTime && lastMouseTime !== timeNow) {
+			mouseSpeed = Math.round(mouseTravel / (timeNow - lastMouseTime) * 1000);
+            mouseTravel = 0;
+		}
+		lastMouseTime = timeNow;
+		angleAtMove = rad2deg(Math.atan2(clientY - y, clientX - x)) - angleAtInteract;
+		rotation = rotationAtInteract + angleAtMove;
+		this.setState({ lastMouseX, lastMouseY, lastMouseTime, angleAtMove, mouseTravel, mouseSpeed, rotation });
 	},
 	handleMouseUp(e) {
 		this.preventDefault(e);
-		let isInteracting = !this.state.isInteracting;
-		this.setState({ isInteracting });
+		let { isInteracting } = this.state;
+		if (!isInteracting) return;
+		this.handleAudioUp();
+		isInteracting = false;
+		let mouseSpeed = 0;
+		this.setState({ isInteracting, mouseSpeed });
 	},
 	onAudioProcess(e) {
 
@@ -139,7 +201,13 @@ let Vinyl = React.createClass({
 	},
 	componentWillReceiveProps(nextProps) {
 		let { isPlaying, context } = nextProps;
-		let { source, playbackRate, startOffset, startTime, hasPlayed, tween, duration, rotation } = this.state;
+		let {
+			source,
+			playbackRate,
+			startOffset, startTime,
+			hasPlayed, tween,
+			duration, rotation
+		} = this.state;
 		if (isPlaying !== this.state.isPlaying) {
 			let newState = { isPlaying };
 			if (isPlaying) {
