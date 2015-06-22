@@ -17,12 +17,12 @@ let Styles = {
 			cursor: '-webkit-grab'
 		},
 		left: {
-			left: '-225px',
+			left: '-25px',
 			right: 'auto',
 		},
 		right: {
 			left: 'auto',
-			right: '-225px'
+			right: '-25px'
 		}
 	},
 	details: {
@@ -44,6 +44,7 @@ let Vinyl = React.createClass({
 	getInitialState() {
 		return Object.assign({
 			isPlaying: false,
+			isInteracting: false,
 			playbackRate: 1,
 			startOffset: 0,
 			startTime: 0,
@@ -87,12 +88,16 @@ let Vinyl = React.createClass({
 			.to(val - 360)
 			.repeat(Infinity)
 			.step(rotation => {
-				let node = React.findDOMNode(this.refs.label);
 				this.setState({ rotation });
-				node.style.transform = `rotate(${rotation}deg)`;
 			});
 
 		return { duration, tween };
+	},
+	globalToLocal({ clientX, clientY }) {
+
+	},
+	preventDefault(e) {
+		e.preventDefault();
 	},
 	handlePlay() {
 		Actions.togglePlayState(this.props.platter, !this.state.isPlaying);
@@ -101,26 +106,44 @@ let Vinyl = React.createClass({
 		let playbackRate = diff === 0 ? 1 : Math.max(0.25, this.state.playbackRate += (diff * 0.25));
 		this.setState({ playbackRate });
 	},
-	onAudioProcess() {
+	handleMouseDown(e) {
+		this.preventDefault(e);
+		let isInteracting = !this.state.isInteracting;
+		this.setState({ isInteracting });
+	},
+	handleMouseMove(e) {
+		this.preventDefault(e);
+		let { isInteracting } = this.state;
+		if (!isInteracting) return;
+	},
+	handleMouseUp(e) {
+		this.preventDefault(e);
+		let isInteracting = !this.state.isInteracting;
+		this.setState({ isInteracting });
+	},
+	onAudioProcess(e) {
 
 	},
 	onAudioEnded() {
 		Actions.togglePlayState(this.props.platter, false);
 		this.setState(this.setupSource());
+		this.state.tween.stop();
 	},
 	componentWillMount() {
-
+		window.addEventListener('mouseout', this.handleMouseUp);
+		document.body.addEventListener('touchmove', this.preventDefault);
 	},
 	componentWillUnmount() {
-
+		window.removeEventListener('mouseout', this.handleMouseUp);
+		document.body.removeEventListener('touchmove', this.preventDefault);
 	},
 	componentWillReceiveProps(nextProps) {
 		let { isPlaying, context } = nextProps;
-		let { source, playbackRate, startOffset, startTime, hasPlayed, tween } = this.state;
+		let { source, playbackRate, startOffset, startTime, hasPlayed, tween, duration, rotation } = this.state;
 		if (isPlaying !== this.state.isPlaying) {
 			let newState = { isPlaying };
 			if (isPlaying) {
-				tween[tween.hasStarted ? 'play' : 'start']();
+				tween.stop().from(rotation).to(rotation - 360).duration(duration / playbackRate).start();
 				source.playbackRate.value = playbackRate;
 				source.start(0, startOffset);
 				Object.assign(newState, {
@@ -128,7 +151,6 @@ let Vinyl = React.createClass({
 					startTime: context.currentTime
 				});
 			} else if (hasPlayed) {
-				tween.pause();
 				Object.assign(newState, {
 					startOffset: startOffset += context.currentTime - startTime
 				});
@@ -143,12 +165,24 @@ let Vinyl = React.createClass({
 			source.playbackRate.value = nextState.playbackRate;
 			tween.stop().from(rotation).to(rotation - 360).duration(duration / nextState.playbackRate).start();
 		}
+		if (rotation !== nextState.rotation) {
+			React.findDOMNode(this.refs.label).style.transform = `rotateZ(${nextState.rotation}deg)`;
+		}
 	},
 	render() {
 		let vinylMergedStyles = Object.assign({}, Styles.vinyl.base, Styles.vinyl[this.props.platter]);
 		return (
 			<div>
-				<div ref="vinyl" style={vinylMergedStyles}>
+				<div ref="vinyl"
+					style={vinylMergedStyles}
+					onMouseDown={this.handleMouseDown}
+					onMouseUp={this.handleMouseUp}
+					onMouseOut={this.handleMouseUp}
+					onMouseMove={this.handleMouseMove}
+					onTouchStart={this.handleMouseDown}
+					onTouchMove={this.handleMouseMove}
+					onTouchEnd={this.handleMouseUp}
+					onTouchCancel={this.handleMouseUp}>
 					<img ref="label" style={Styles.label} src={this.props.artwork.large}/>
 				</div>
 				<div ref="details" style={Styles.details}>
